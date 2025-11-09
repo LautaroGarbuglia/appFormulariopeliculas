@@ -1,113 +1,110 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Image } from "react-native";
-import { useRoute } from "@react-navigation/native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import CustomHeader from '../components/CustomHeader';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, Image, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
-export function MoviesScreen({ navigation }) {
-  const [movie, setMovie] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const route = useRoute();
-  const insets = useSafeAreaInsets();
+export default function TpPantalla1() {
+  const [peliculas, setPeliculas] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const navigation = useNavigation(); // ✅ acceso al navegador
 
   useEffect(() => {
-    const options = {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
-        Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5MDc2MTc2Y2M1YjIzNTU4ZTk1NTE5Mjg4ODUwNjY2YiIsIm5iZiI6MTcxNzcxNzg3OC4xNSwic3ViIjoiNjY2MjRiNzZhNjU4N2E2NmI5M2M3ZThjIiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.G3Te8trDYm_2EtECO0gjuU3AxY_Y1SyylIrMIa5EVxo'
+    const fetchPeliculas = async () => {
+      try {
+        const res = await axios.get(
+          'https://api.themoviedb.org/3/movie/popular?language=es-ES&page=1',
+          {
+            headers: {
+              Authorization:
+                'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5MDc2MTc2Y2M1YjIzNTU4ZTk1NTE5Mjg4ODUwNjY2YiIsIm5iZiI6MTcxNzcxNzg3OC4xNSwic3ViIjoiNjY2MjRiNzZhNjU4N2E2NmI5M2M3ZThjIiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.G3Te8trDYm_2EtECO0gjuU3AxY_Y1SyylIrMIa5EVxo',
+              accept: 'application/json',
+            },
+          }
+        );
+        setPeliculas(res.data.results);
+      } catch (error) {
+        console.error('Error al obtener películas:', error);
+      } finally {
+        setCargando(false);
       }
     };
-
-    fetch('https://api.themoviedb.org/3/movie/671?language=es-ES', options)
-      .then(res => res.json())
-      .then(res => {
-        setMovie(res);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    fetchPeliculas();
   }, []);
 
-  if (loading) {
-    return (
-      <View style={styles.Container}>
-        <ActivityIndicator size="large" color="#6200EE" />
-      </View>
-    );
-  }
+  // 🔴 función de logout
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('@session_user');
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    } catch (e) {
+      console.error('Error al cerrar sesión:', e);
+    }
+  };
 
-  if (!movie) {
+  if (cargando) {
     return (
-      <View style={styles.Container}>
-        <Text style={styles.ErrorText}>No se encontró la película.</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007bff" />
+        <Text style={{ marginTop: 10 }}>Cargando películas...</Text>
       </View>
     );
   }
 
   return (
-    <View style={[{ paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <CustomHeader title="PeliculaTp" />
-
-      <Image
-        source={{ uri: `https://image.tmdb.org/t/p/w500${movie.poster_path}` }}
-        style={styles.poster}
-      />
-
-      <Text style={styles.Title}>{movie.title}</Text>
-      <Text style={styles.tagline}>{movie.tagline}</Text>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("tpPantalla2", { movie })}
-      >
-        <Text style={styles.buttonText}>Ver detalles</Text>
+    <View style={styles.container}>
+      {/* 🔴 Botón de logout */}
+      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+        <Text style={styles.logoutText}>Cerrar sesión</Text>
       </TouchableOpacity>
+
+      <Text style={styles.title}>🎬 Películas Populares</Text>
+
+      <FlatList
+        data={peliculas}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.movieItem}>
+            <Image
+              source={{ uri: `https://image.tmdb.org/t/p/w200${item.poster_path}` }}
+              style={styles.poster}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.movieTitle}>{item.title}</Text>
+              <Text style={styles.rating}>⭐ {item.vote_average.toFixed(1)}</Text>
+            </View>
+          </View>
+        )}
+      />
     </View>
   );
 }
 
+// 🎨 Estilos
 const styles = StyleSheet.create({
-  Title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  tagline: {
-    fontSize: 16,
-    fontStyle: 'italic',
-    color: '#1274b6ff',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  poster: {
-    marginTop: 30,
-    width: 300,
-    height: 450,
-    borderRadius: 10,
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  Container: {
-    flex: 1,
-    justifyContent: 'center',
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#fff', padding: 10 },
+  title: { fontSize: 22, fontWeight: '700', marginBottom: 10, textAlign: 'center' },
+  movieItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-  },
-  button: {
-    backgroundColor: '#6200EE',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    marginBottom: 12,
+    backgroundColor: '#f5f5f5',
     borderRadius: 8,
-    alignSelf: 'center',
+    padding: 8,
   },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  poster: { width: 80, height: 120, borderRadius: 6, marginRight: 10 },
+  movieTitle: { fontSize: 16, fontWeight: '600', flexWrap: 'wrap' },
+  rating: { color: '#555', marginTop: 4 },
+  logoutButton: {
+    backgroundColor: '#e63946',
+    padding: 10,
+    borderRadius: 6,
+    alignSelf: 'flex-end',
+    marginBottom: 10,
   },
-  ErrorText: {
-    fontSize: 16,
-    color: "red",
+  logoutText: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });
