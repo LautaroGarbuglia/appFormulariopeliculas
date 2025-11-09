@@ -4,7 +4,7 @@ import { createUser, updateUser } from './database';
 
 export default function UserFormScreen({ navigation, route }) {
   const { mode, user } = route.params || {};
-  const [correo, setCorreo] = useState(user?.nombre || ''); // usamos "nombre" como "correo"
+  const [correo, setCorreo] = useState(user?.nombre || '');
   const [username, setUsername] = useState(user?.username || '');
   const [password, setPassword] = useState('');
   const [rol, setRol] = useState(user?.rol || 'user');

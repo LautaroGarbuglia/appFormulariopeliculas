@@ -27,7 +27,7 @@ export default function App() {
     })();
   }, []);
 
-  if (!initialRoute) return null; // pantalla de carga opcional
+  if (!initialRoute) return null;
 
   return (
     <NavigationContainer>

@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 export default function TpPantalla1() {
   const [peliculas, setPeliculas] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const navigation = useNavigation(); // ✅ acceso al navegador
+  const navigation = useNavigation(); 
 
   useEffect(() => {
     const fetchPeliculas = async () => {
@@ -32,7 +32,7 @@ export default function TpPantalla1() {
     fetchPeliculas();
   }, []);
 
-  // 🔴 función de logout
+  //función de logout
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('@session_user');
@@ -53,7 +53,7 @@ export default function TpPantalla1() {
 
   return (
     <View style={styles.container}>
-      {/* 🔴 Botón de logout */}
+      {/*Botón de logout */}
       <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
         <Text style={styles.logoutText}>Cerrar sesión</Text>
       </TouchableOpacity>
@@ -80,7 +80,6 @@ export default function TpPantalla1() {
   );
 }
 
-// 🎨 Estilos
 const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, backgroundColor: '#fff', padding: 10 },
